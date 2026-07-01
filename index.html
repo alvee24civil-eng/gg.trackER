@@ -234,7 +234,41 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 
 <script>
 const WEEKS=12;
-const schedule=[
+
+// Week 1 — old routine
+const scheduleOld=[
+  {day:"Saturday",slots:[
+    {code:"CE 2103",name:"Engg. Materials · MSI",period:"P1"},
+    {code:"Hum 2101",name:"Humanities · MB",period:"P2"},
+    {code:"Math 2101",name:"Mathematics III · IAY",period:"P3"},
+    {code:"CE 2122",name:"Fluid Lab · HMR/BR/MDA",period:"P7–9"},
+  ]},
+  {day:"Sunday",slots:[
+    {code:"CE 2110",name:"Surveying · MRI",period:"P1–3"},
+    {code:"CE 2103",name:"Engg. Materials · MMS",period:"P4"},
+    {code:"CE 2121",name:"Fluid Mechanics · X",period:"P6"},
+  ]},
+  {day:"Monday",slots:[
+    {code:"Math 2101",name:"Mathematics III · IAY",period:"P1"},
+    {code:"CE 2103",name:"Engg. Materials · MSI",period:"P2"},
+    {code:"CE 2121",name:"Fluid Mechanics · BR",period:"P3"},
+    {code:"CE 2104",name:"Concrete Lab · MMS/MSI/X",period:"P4–6"},
+  ]},
+  {day:"Tuesday",slots:[
+    {code:"Math 2101",name:"Mathematics III · MHU",period:"P1"},
+    {code:"Hum 2101",name:"Humanities · NF",period:"P2"},
+    {code:"CE 2121",name:"Fluid Mechanics · BR",period:"P4"},
+    {code:"CE 2103",name:"Engg. Materials · MMS",period:"P5"},
+    {code:"CE 2111",name:"Numerical Methods · MKZ",period:"P7–8"},
+  ]},
+  {day:"Wednesday",slots:[
+    {code:"CE 2121",name:"Fluid Mechanics · X",period:"P4"},
+    {code:"CE 2111",name:"Numerical Methods · KJS",period:"P5"},
+  ]},
+];
+
+// Week 2–12 — new routine
+const scheduleNew=[
   {day:"Saturday",slots:[
     {code:"CE 2103",name:"Engg. Materials · MSI",period:"P1"},
     {code:"Hum 2101",name:"Humanities · MB",period:"P2"},
@@ -264,7 +298,9 @@ const schedule=[
   ]},
 ];
 
-const STORAGE_KEY='attendx_v3';
+function getSchedule(w){ return w===0 ? scheduleOld : scheduleNew; }
+
+const STORAGE_KEY='attendx_v4';
 let state=loadState();
 let openWeeks=new Set([0]);
 let deferredPrompt=null;
@@ -272,9 +308,12 @@ let deferredPrompt=null;
 function loadState(){
   try{
     const s=localStorage.getItem(STORAGE_KEY);
-    if(s){const p=JSON.parse(s);if(p.length===WEEKS&&p[0].length===schedule.length)return p;}
+    if(s){
+      const p=JSON.parse(s);
+      if(p.length===WEEKS) return p;
+    }
   }catch(e){}
-  return Array.from({length:WEEKS},()=>schedule.map(d=>d.slots.map(()=>null)));
+  return Array.from({length:WEEKS},(_,w)=>getSchedule(w).map(d=>d.slots.map(()=>null)));
 }
 function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}}
 
@@ -289,18 +328,18 @@ function toggleSubj(){
 }
 
 function subjectStats(){
-  // Build a map: subjectCode -> {total, present, absent, name}
   const map={};
-  schedule.forEach((dayObj,dIdx)=>{
-    dayObj.slots.forEach((slot,sIdx)=>{
-      const key=slot.code;
-      if(!map[key])map[key]={code:slot.code,name:slot.name.split('·')[0].trim(),total:0,present:0,absent:0,excused:0};
-      state.forEach(week=>{
-        const s=week[dIdx][sIdx];
+  for(let w=0;w<WEEKS;w++){
+    const sched=getSchedule(w);
+    sched.forEach((dayObj,dIdx)=>{
+      dayObj.slots.forEach((slot,sIdx)=>{
+        const key=slot.code;
+        if(!map[key])map[key]={code:slot.code,name:slot.name.split('·')[0].trim(),total:0,present:0,absent:0,excused:0};
+        const s=state[w][dIdx]?state[w][dIdx][sIdx]:null;
         if(s){map[key].total++;if(s==='p')map[key].present++;if(s==='a')map[key].absent++;if(s==='e')map[key].excused++;}
       });
     });
-  });
+  }
   return Object.values(map);
 }
 
@@ -366,7 +405,7 @@ function render(){
     const{total,present}=weekStats(w);
     const pct=total>0?Math.round(present/total*100):null;
     const pc=pillClass(pct);
-    const badgeText=pct!==null?pct+'%':'—';
+    const sched=getSchedule(w);
 
     const block=document.createElement('div');
     block.className='week-card'+(isOpen?' is-open':'');
@@ -375,10 +414,10 @@ function render(){
     hdr.className='week-hdr';
     hdr.innerHTML=`<div class="week-num-badge">${w+1}</div>
       <div class="week-hdr-info">
-        <div class="week-hdr-title">Week ${w+1}</div>
+        <div class="week-hdr-title">Week ${w+1}${w===0?' <span style="font-size:10px;color:var(--text3);font-weight:500">(old routine)</span>':''}</div>
         <div class="week-hdr-sub">${total>0?present+' of '+total+' classes attended':'No data yet'}</div>
       </div>
-      <span class="week-pill ${pc}">${badgeText}</span>
+      <span class="week-pill ${pc}">${pct!==null?pct+'%':'—'}</span>
       <span class="week-chevron${isOpen?' open':''}">⌄</span>`;
     hdr.addEventListener('click',()=>{
       if(openWeeks.has(w))openWeeks.delete(w);else openWeeks.add(w);
@@ -396,7 +435,7 @@ function render(){
     if(isOpen){
       const body=document.createElement('div');
       body.className='week-body';
-      schedule.forEach((dayObj,dIdx)=>{
+      sched.forEach((dayObj,dIdx)=>{
         const sec=document.createElement('div');
         sec.className='day-section';
         const lbl=document.createElement('div');
@@ -406,7 +445,7 @@ function render(){
         dayObj.slots.forEach((slot,sIdx)=>{
           const row=document.createElement('div');
           row.className='class-row';
-          const s=state[w][dIdx][sIdx];
+          const s=state[w][dIdx]?state[w][dIdx][sIdx]:null;
           row.innerHTML=`<div class="class-icon">${codeIcon(slot.code)}</div>
             <div class="class-info">
               <div class="class-code">${slot.code}<span class="class-period-tag">${slot.period}</span></div>
@@ -486,8 +525,12 @@ const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
 document.getElementById('manifest-placeholder').href=URL.createObjectURL(blob);
 
 if('serviceWorker' in navigator){
-  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>clients.claim());self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));`;
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(reg=>reg.unregister());
+  });
+  caches.keys().then(keys=>{
+    keys.forEach(key=>caches.delete(key));
+  });
 }
 
 render();
