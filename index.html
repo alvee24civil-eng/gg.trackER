@@ -238,34 +238,33 @@ const schedule=[
   {day:"Saturday",slots:[
     {code:"CE 2103",name:"Engg. Materials · MSI",period:"P1"},
     {code:"Hum 2101",name:"Humanities · MB",period:"P2"},
-    {code:"Math 2101",name:"Mathematics III · IAY",period:"P3"},
-    {code:"CE 2122",name:"Fluid Lab · HMR/BR/MDA",period:"P7–9"},
+    {code:"Math 2101",name:"Mathematics III · IAY",period:"P5"},
   ]},
   {day:"Sunday",slots:[
     {code:"CE 2110",name:"Surveying · MRI",period:"P1–3"},
     {code:"CE 2103",name:"Engg. Materials · MMS",period:"P4"},
-    {code:"CE 2121",name:"Fluid Mechanics · X",period:"P6"},
+    {code:"CE 2121",name:"Fluid Mechanics · MRH",period:"P5"},
+    {code:"CE 2111",name:"Numerical Methods · KJS",period:"P6"},
   ]},
   {day:"Monday",slots:[
     {code:"Math 2101",name:"Mathematics III · IAY",period:"P1"},
     {code:"CE 2103",name:"Engg. Materials · MSI",period:"P2"},
     {code:"CE 2121",name:"Fluid Mechanics · BR",period:"P3"},
-    {code:"CE 2104",name:"Concrete Lab · MMS/MSI/X",period:"P4–6"},
+    {code:"CE 2104",name:"Concrete Lab · MMS/MSI/AS",period:"P4–6"},
   ]},
   {day:"Tuesday",slots:[
     {code:"Math 2101",name:"Mathematics III · MHU",period:"P1"},
     {code:"Hum 2101",name:"Humanities · NF",period:"P2"},
     {code:"CE 2121",name:"Fluid Mechanics · BR",period:"P4"},
     {code:"CE 2103",name:"Engg. Materials · MMS",period:"P5"},
-    {code:"CE 2111",name:"Numerical Methods · MKZ",period:"P7–8"},
   ]},
   {day:"Wednesday",slots:[
-    {code:"CE 2121",name:"Fluid Mechanics · X",period:"P4"},
-    {code:"CE 2111",name:"Numerical Methods · KJS",period:"P5"},
+    {code:"CE 2122",name:"Fluid Lab · HMR/BR/MDA",period:"P1–3"},
+    {code:"CE 2121",name:"Fluid Mechanics · MRH",period:"P5"},
   ]},
 ];
 
-const STORAGE_KEY='attendx_v2';
+const STORAGE_KEY='attendx_v3';
 let state=loadState();
 let openWeeks=new Set([0]);
 let deferredPrompt=null;
